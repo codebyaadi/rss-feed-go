@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/codebyaadi/rss-agg/internal/models"
 	"github.com/codebyaadi/rss-agg/internal/database"
-	"github.com/codebyaadi/rss-agg/internal/helpers"
+	"github.com/codebyaadi/rss-agg/pkg/helpers"
 	"github.com/google/uuid"
 )
 
@@ -41,5 +42,9 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	helpers.ResponseWithJSON(w, 200, user)
+	helpers.ResponseWithJSON(w, 200, models.DatabaseUserToUser(user))
+}
+
+func (cfg *ApiConfig) GetUserByApiKeyHandler(w http.ResponseWriter, r *http.Request) {
+	
 }

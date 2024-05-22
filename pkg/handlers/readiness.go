@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/codebyaadi/rss-agg/internal/helpers"
+	"github.com/codebyaadi/rss-agg/pkg/helpers"
 )
 
 func ReadinessHandler(w http.ResponseWriter, r *http.Request) {

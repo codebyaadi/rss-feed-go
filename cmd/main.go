@@ -1,21 +1,25 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
-	"database/sql"
+	"os/signal"
+	"time"
 
 	"github.com/codebyaadi/rss-agg/internal/database"
-	"github.com/codebyaadi/rss-agg/internal/handlers"
-	"github.com/codebyaadi/rss-agg/internal/helpers"
+	"github.com/codebyaadi/rss-agg/pkg/handlers"
+	"github.com/codebyaadi/rss-agg/pkg/helpers"
 	"github.com/joho/godotenv"
-	_"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, relying on enviroment variables")
+	}
 
 	portString := os.Getenv("PORT")
 	if portString == "" {
@@ -29,7 +33,12 @@ func main() {
 
 	conn, err := sql.Open("postgres", dbUrl)
 	if err != nil {
-		log.Fatal("Can't connect to Postgres database!", err)
+		log.Fatalf("Can't connect to Postgres database! %v", err)
+	}
+	defer conn.Close()
+
+	if err := conn.Ping(); err != nil {
+		log.Fatalf("Cannot reach postgres database %v", err)
 	}
 
 	queries := database.New(conn)
@@ -38,11 +47,37 @@ func main() {
 		DB: queries,
 	}
 
-	http.HandleFunc("/", helpers.MethodMiddleware(http.MethodGet, handlers.ReadinessHandler))
-	http.HandleFunc("/err", helpers.MethodMiddleware(http.MethodPost, handlers.ErrorHandler))
-	http.HandleFunc("/user", helpers.MethodMiddleware(http.MethodPost, apiCfg.CreateUserHandler))
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", helpers.MethodMiddleware(http.MethodGet, handlers.ReadinessHandler))
+	mux.HandleFunc("/err", helpers.MethodMiddleware(http.MethodPost, handlers.ErrorHandler))
+	mux.HandleFunc("/user", helpers.MethodMiddleware(http.MethodPost, apiCfg.CreateUserHandler))
 
 	address := ":" + portString
-	fmt.Printf("Server is running on %s\n", address)
-	log.Fatal(http.ListenAndServe(address, nil))
+	server := &http.Server{
+		Addr: address,
+		Handler: mux,
+	}
+
+	shutdownCh := make(chan os.Signal, 1)
+	signal.Notify(shutdownCh, os.Interrupt)
+
+	go func() {
+		log.Printf("Server is running on %s\n", address)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Could not listen on %s: %v\n", address, err)
+		}
+	}()
+
+	<-shutdownCh
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exiting")
 }
