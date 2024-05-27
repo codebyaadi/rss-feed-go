@@ -11,7 +11,6 @@ import (
 
 	"github.com/codebyaadi/rss-agg/internal/database"
 	"github.com/codebyaadi/rss-agg/pkg/handlers"
-	"github.com/codebyaadi/rss-agg/pkg/helpers"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -49,9 +48,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", helpers.MethodMiddleware(http.MethodGet, handlers.ReadinessHandler))
-	mux.HandleFunc("/err", helpers.MethodMiddleware(http.MethodPost, handlers.ErrorHandler))
-	mux.HandleFunc("/user", helpers.MethodMiddleware(http.MethodPost, apiCfg.CreateUserHandler))
+	mux.HandleFunc("GET /root", handlers.ReadinessHandler)
+	mux.HandleFunc("POST /err", handlers.ErrorHandler)
+	mux.HandleFunc("POST /user", apiCfg.CreateUserHandler)
 
 	address := ":" + portString
 	server := &http.Server{

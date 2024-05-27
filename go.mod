@@ -1,6 +1,6 @@
 module github.com/codebyaadi/rss-agg
 
-go 1.21.6
+go 1.22.3
 
 require (
 	github.com/google/uuid v1.5.0
