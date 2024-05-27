@@ -40,6 +40,8 @@ func main() {
 		log.Fatalf("Cannot reach postgres database %v", err)
 	}
 
+	log.Println("Successfully connected to Postgres database")
+
 	queries := database.New(conn)
 
 	apiCfg := handlers.ApiConfig{
@@ -51,6 +53,7 @@ func main() {
 	mux.HandleFunc("GET /root", handlers.ReadinessHandler)
 	mux.HandleFunc("POST /err", handlers.ErrorHandler)
 	mux.HandleFunc("POST /user", apiCfg.CreateUserHandler)
+	mux.HandleFunc("GET /user", apiCfg.GetUserHandler)
 
 	address := ":" + portString
 	server := &http.Server{

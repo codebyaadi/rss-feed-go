@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/codebyaadi/rss-agg/internal/models"
+	"github.com/codebyaadi/rss-agg/internal/auth"
 	"github.com/codebyaadi/rss-agg/internal/database"
+	"github.com/codebyaadi/rss-agg/internal/models"
 	"github.com/codebyaadi/rss-agg/pkg/helpers"
 	"github.com/google/uuid"
 )
@@ -45,6 +46,18 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	helpers.ResponseWithJSON(w, 200, models.DatabaseUserToUser(user))
 }
 
-func (cfg *ApiConfig) GetUserByApiKeyHandler(w http.ResponseWriter, r *http.Request) {
-	
+func (cfg *ApiConfig) GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetApiKey(r.Header)
+	if err != nil {
+		helpers.ResponseWithError(w, 403, fmt.Sprintf("Auth error: %v", err))
+		return
+	}
+
+	user, err := cfg.DB.GetUserByApikey(r.Context(), apiKey)
+	if err != nil {
+		helpers.ResponseWithError(w, 403, fmt.Sprintf("Couldn't get the user: %v", err))
+		return
+	}
+
+	helpers.ResponseWithJSON(w, 200, models.DatabaseUserToUser(user))
 }
