@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"net/http"
+
+	"github.com/codebyaadi/rss-agg/internal/database"
 )
 
 func MethodMiddleware(method string, next http.HandlerFunc) http.HandlerFunc {
@@ -12,4 +14,10 @@ func MethodMiddleware(method string, next http.HandlerFunc) http.HandlerFunc {
         }
         next(w, r)
     }
+}
+
+type authHandler func (http.ResponseWriter, *http.Request, database.User)
+
+func (cfg *) authMiddleware(handler authHandler) http.HandlerFunc {
+    
 }

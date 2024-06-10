@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/codebyaadi/rss-agg/internal/auth"
 	"github.com/codebyaadi/rss-agg/internal/database"
 	"github.com/codebyaadi/rss-agg/internal/models"
 	"github.com/codebyaadi/rss-agg/pkg/helpers"
-	"github.com/google/uuid"
 )
 
 type ApiConfig struct {
